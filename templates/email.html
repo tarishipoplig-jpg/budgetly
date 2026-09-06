@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card center-card">
+  <h2>{{ 'Log in to Budgetly' if mode == 'login' else 'Create your Budgetly account' }}</h2>
+  <p class="muted">Use your email and password to {{ 'continue' if mode == 'login' else 'get started' }}.</p>
+  <form id="emailForm" method="POST" novalidate>
+    <input type="hidden" name="mode" id="modeInput" value="{{ mode or 'login' }}">
+    <label class="label">Email address</label>
+    <input id="emailInput" name="email" type="email" value="{{ email if email }}" placeholder="you@example.com" required>
+    <label class="label">Password</label>
+    <input id="passwordInput" name="password" type="password" minlength="8" placeholder="At least 8 characters" required>
+    <div id="emailError" class="error">{{ error if error }}</div>
+    <button class="btn primary" id="submitButton">Log in</button>
+  </form>
+  <p class="muted auth-switch">
+    <span id="switchPrompt">Need an account?</span>
+    <button type="button" class="btn" id="switchButton">Sign up</button>
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Client-side validation (also server-validated)
+document.getElementById('emailForm').addEventListener('submit', function(e){
+  var email = document.getElementById('emailInput').value.trim();
+  var password = document.getElementById('passwordInput').value;
+  var re = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  if(!re.test(email)){
+    e.preventDefault();
+    document.getElementById('emailError').textContent = 'Please enter a valid email';
+    document.getElementById('emailInput').classList.add('input-error');
+    return false;
+  }
+  if(password.length < 8){
+    e.preventDefault();
+    document.getElementById('emailError').textContent = 'Password must be at least 8 characters';
+    return false;
+  }
+});
+
+document.getElementById('switchButton').addEventListener('click', function(){
+  var modeInput = document.getElementById('modeInput');
+  var signup = modeInput.value !== 'signup';
+  modeInput.value = signup ? 'signup' : 'login';
+  document.querySelector('h2').textContent = signup ? 'Create your Budgetly account' : 'Log in to Budgetly';
+  document.querySelector('.muted').textContent = signup ? 'Use your email and password to get started.' : 'Use your email and password to continue.';
+  document.getElementById('submitButton').textContent = signup ? 'Sign up' : 'Log in';
+  document.getElementById('switchPrompt').textContent = signup ? 'Already have an account?' : 'Need an account?';
+  this.textContent = signup ? 'Log in' : 'Sign up';
+  document.getElementById('emailError').textContent = '';
+});
+</script>
+{% endblock %}

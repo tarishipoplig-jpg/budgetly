@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <div class="grid">
+    <div>
+      <h2>Welcome to Budgetly</h2>
+      <p class="slogan">Plan smarter. Spend wiser. Save happier.</p>
+      <form id="setupForm" method="POST">
+        <section class="setup-step" id="standardStep">
+          <span class="step-kicker">Step 1 of 2</span>
+          <h3>Start with your local standard</h3>
+          <p class="muted">Choose your emirate and profile to see a typical monthly AED plan before we tailor it to your income.</p>
+
+          <label class="label">Emirate</label>
+          <select name="emirate" id="emirate" required>
+            {% for emirate in emirates %}
+            <option value="{{ emirate }}">{{ emirate }}</option>
+            {% endfor %}
+          </select>
+
+          <label class="label">I am a</label>
+          <div class="radio-row">
+            <label><input type="radio" name="user_type" value="student" checked> Student</label>
+            <label><input type="radio" name="user_type" value="professional"> Working professional</label>
+          </div>
+
+          <div id="standardSuggested" class="suggested card muted"></div>
+          <button class="btn primary" type="button" id="nextStep">Next: personalize it</button>
+        </section>
+
+        <section class="setup-step is-hidden" id="incomeStep">
+          <span class="step-kicker">Step 2 of 2</span>
+          <h3>Now add your monthly income</h3>
+          <p class="muted">Your standard plan will be scaled to your actual monthly AED income.</p>
+          <label class="label">Monthly income (AED)</label>
+          <input name="income" id="income" type="number" min="0" step="0.01" placeholder="e.g. 5000 AED" required>
+          <div id="personalizedSuggested" class="suggested card muted"></div>
+          <div class="setup-actions">
+            <button class="btn" type="button" id="backStep">Back</button>
+            <button class="btn primary" type="submit">Save & Continue</button>
+          </div>
+        </section>
+      </form>
+    </div>
+    <aside>
+      <div class="card small">
+        <h3>Why set a budget?</h3>
+        <p class="muted">A clear breakdown helps you prioritise essentials and boost savings automatically.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MONTHLY_BUDGETS_BY_EMIRATE = {{ budgets_by_emirate | tojson }};
+const PERSONALIZED_RATIOS_BY_EMIRATE = {{ personalized_ratios_by_emirate | tojson }};
+
+function selectedBudget(){
+  const userType = document.querySelector('input[name="user_type"]:checked').value;
+  const emirate = document.getElementById('emirate').value;
+  const emirateBudgets = MONTHLY_BUDGETS_BY_EMIRATE[emirate] || MONTHLY_BUDGETS_BY_EMIRATE['Dubai'];
+  return emirateBudgets[userType] || emirateBudgets.professional;
+}
+
+function renderBudget(target, title, budget){
+  let html = `<strong>${title}</strong><ul class="breakdown">`;
+  for(const category in budget){
+    html += `<li>${category}: <span class="accent">AED ${budget[category].toLocaleString()}</span></li>`;
+  }
+  document.getElementById(target).innerHTML = html + '</ul>';
+}
+
+function renderSuggested(){
+  const standardBudget = selectedBudget();
+  const income = parseFloat(document.getElementById('income').value) || 0;
+  const userType = document.querySelector('input[name="user_type"]:checked').value;
+  const emirate = document.getElementById('emirate').value;
+  const emirateRatios = PERSONALIZED_RATIOS_BY_EMIRATE[emirate] || PERSONALIZED_RATIOS_BY_EMIRATE['Dubai'];
+  const ratios = emirateRatios[userType] || emirateRatios.professional;
+  const personalizedBudget = {};
+  for(const category in standardBudget){
+    personalizedBudget[category] = Math.round(income * (ratios[category] || 0) * 100) / 100;
+  }
+  renderBudget('personalizedSuggested', 'Your personalized monthly AED plan', personalizedBudget);
+}
+
+document.getElementById('emirate').addEventListener('change', function(){ renderBudget('standardSuggested', 'Typical monthly AED estimate', selectedBudget()); });
+document.querySelectorAll('input[name="user_type"]').forEach(r=>r.addEventListener('change', function(){ renderBudget('standardSuggested', 'Typical monthly AED estimate', selectedBudget()); }));
+document.getElementById('nextStep').addEventListener('click', function(){
+  document.getElementById('standardStep').classList.add('is-hidden');
+  document.getElementById('incomeStep').classList.remove('is-hidden');
+  document.getElementById('income').focus();
+  renderSuggested();
+});
+document.getElementById('backStep').addEventListener('click', function(){
+  document.getElementById('incomeStep').classList.add('is-hidden');
+  document.getElementById('standardStep').classList.remove('is-hidden');
+});
+document.getElementById('income').addEventListener('input', renderSuggested);
+renderBudget('standardSuggested', 'Typical monthly AED estimate', selectedBudget());
+</script>
+{% endblock %}

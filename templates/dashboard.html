@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block content %}
+{% set category_icons = {
+  'Rent': 'home',
+  'Transport': 'bus-front',
+  'Groceries': 'shopping-cart',
+  'Electricity': 'zap',
+  'Water': 'droplets',
+  'Internet/Wi-Fi': 'wifi',
+  'Mobile Recharge/Phone': 'smartphone',
+  'Personal Care': 'heart-handshake',
+  'Entertainment': 'clapperboard',
+  'Other': 'ellipsis'
+} %}
+<div class="grid">
+  <section class="col-8">
+    <div class="card">
+      <header class="card-header">
+        <h2>Dashboard</h2>
+        <div class="meta">Currency: <strong>{{ currency }}</strong> &middot; Emirate: <strong>{{ emirate }}</strong></div>
+      </header>
+
+      <form method="GET" action="{{ url_for('dashboard') }}" class="month-picker">
+        <label for="month">Viewing month</label>
+        <select name="month" id="month" onchange="this.form.submit()">
+          <option value="{{ selected_month }}">{{ selected_month_label }}</option>
+          {% for month in available_months if month != selected_month %}
+          <option value="{{ month }}">{{ month_labels[month] }}</option>
+          {% endfor %}
+        </select>
+        <span class="muted">Pie chart and actual spending below are for this month only.</span>
+      </form>
+
+      <section class="monthly-summary {% if month_difference < 0 %}summary-over{% endif %}">
+        <div class="summary-heading">
+          <span class="summary-icon"><i data-lucide="calendar-range"></i></span>
+          <div>
+            <span class="step-kicker">Monthly snapshot</span>
+            <h3>{{ selected_month_label }} spending</h3>
+          </div>
+        </div>
+        <div class="summary-figures">
+          <div><span>Spent this month</span><strong>AED {{ '%.2f'|format(month_total) }}</strong></div>
+          <div><span>Suggested budget</span><strong>AED {{ '%.2f'|format(suggested_total) }}</strong></div>
+          <div class="summary-difference"><span>{% if month_difference >= 0 %}Remaining{% else %}Over budget{% endif %}</span><strong>AED {{ '%.2f'|format(month_difference|abs) }}</strong></div>
+        </div>
+        <p class="summary-message">AED {{ '%.2f'|format(month_total) }} spent of AED {{ '%.2f'|format(suggested_total) }} budgeted{% if month_difference >= 0 %} — AED {{ '%.2f'|format(month_difference) }} remaining{% else %} — AED {{ '%.2f'|format(month_difference|abs) }} over budget{% endif %}</p>
+      </section>
+
+      {% if edit_expense %}
+      <div class="card edit-panel" id="edit-expense">
+        <h4>Edit expense</h4>
+        <form method="POST" action="{{ url_for('edit_expense', expense_id=edit_expense['id']) }}" class="inline-form">
+          <input type="hidden" name="return_month" value="{{ selected_month }}">
+          <select name="category" required>
+            {% for c in categories %}
+            <option value="{{ c }}" {% if edit_expense['category'] == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+          <input name="amount" type="number" step="0.01" value="{{ edit_expense['amount'] }}" required>
+          <input name="date" type="date" value="{{ edit_expense['date'] }}" required>
+          <input name="note" type="text" value="{{ edit_expense['note'] or '' }}" placeholder="Optional note">
+          <button class="btn primary">Save changes</button>
+          <a class="btn" href="{{ url_for('dashboard', month=selected_month) }}">Cancel</a>
+        </form>
+      </div>
+      {% endif %}
+
+      <div class="charts">
+        <div class="chart-card{% if not pie_data %} empty-chart{% endif %}">
+          <h4 class="section-title"><i data-lucide="pie-chart"></i> Spending by category · {{ selected_month_label }}</h4>
+          {% if not pie_data %}<p class="empty-state">Add an expense to see your category breakdown.</p>{% endif %}
+          {% if pie_data %}
+          <div class="pie-chart-wrap"><canvas id="pieChart"></canvas></div>
+          {% endif %}
+        </div>
+        <div class="chart-card{% if not line_labels %} empty-chart{% endif %}">
+          <h4 class="section-title"><i data-lucide="trending-up"></i> Monthly spending trend</h4>
+          {% if not line_labels %}<p class="empty-state">Your monthly trend will appear after your first expense.</p>{% endif %}
+          {% if line_labels %}
+          <div class="line-chart-wrap"><canvas id="lineChart"></canvas></div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title"><i data-lucide="plus-circle"></i> Add expense</h4>
+        <form method="POST" action="{{ url_for('add_expense') }}" class="inline-form">
+          <select name="category" required>
+            {% for c in categories %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+          <input name="amount" type="number" step="0.01" placeholder="Amount" required>
+          <input name="date" type="date">
+          <input name="note" type="text" placeholder="Optional note">
+          <button class="btn">Add</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="history-heading">
+          <h4 class="section-title"><i data-lucide="receipt"></i> Expense history · {{ selected_month_label }}</h4>
+          <a class="btn export-btn" href="{{ url_for('export_expenses', month=selected_month) }}"><i data-lucide="download"></i> Export as CSV</a>
+        </div>
+        {% if expenses %}
+        <ul class="compare">
+          {% for expense in expenses %}
+          <li class="compare-item">
+            <div class="cat"><i class="category-icon" data-lucide="{{ category_icons.get(expense['category'], 'circle') }}"></i>{{ expense['category'] }} <span class="muted">{{ expense['date'] }}</span></div>
+            <div class="vals">{{ expense['amount'] }} AED</div>
+            {% if expense['note'] %}<div class="muted">{{ expense['note'] }}</div>{% endif %}
+            <div class="expense-actions">
+              <a class="btn" href="{{ url_for('dashboard', edit_expense=expense['id'], month=selected_month) }}#edit-expense">Edit</a>
+              <form method="POST" action="{{ url_for('delete_expense', expense_id=expense['id']) }}" onsubmit="return confirm('Delete this expense?');">
+                <input type="hidden" name="return_month" value="{{ selected_month }}">
+                <button class="btn danger" type="submit">Delete</button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No expenses recorded yet.</p>
+        {% endif %}
+      </div>
+
+    </div>
+  </section>
+
+  <aside class="col-4">
+    <div class="card comparison-panel">
+      <h4><i data-lucide="scale"></i> Suggested vs Actual</h4>
+      <ul class="compare">
+        {% for item in comparison %}
+        <li class="compare-item {% if item.over %}over{% endif %}">
+          <div class="cat"><i class="category-icon" data-lucide="{{ category_icons.get(item.category, 'circle') }}"></i>{{ item.category }}</div>
+          <div class="vals">{{ item.actual }} AED actual / {{ item.suggested }} AED suggested</div>
+          {% if item.over %}
+          <div class="flag">Consider reducing spending in {{ item.category }}.</div>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const pieData = {{ pie_data|tojson }};
+const lineLabels = {{ line_labels|tojson }};
+const lineValues = {{ line_values|tojson }};
+
+{% if pie_data %}
+const pie = new Chart(document.getElementById('pieChart').getContext('2d'), {
+  type: 'pie',
+  data: {
+    labels: Object.keys(pieData),
+    datasets: [{ data: Object.values(pieData), backgroundColor: ['#E4624F','#177C77','#E8B84F','#D98A68','#4E9B96','#C96A54','#8BA9A5'] }]
+  },
+  options: { responsive:true, maintainAspectRatio:true, plugins:{legend:{position:'bottom'}} }
+});
+{% endif %}
+
+{% if line_labels %}
+const line = new Chart(document.getElementById('lineChart').getContext('2d'), {
+  type: 'line',
+  data: { labels: lineLabels, datasets: [{ label:'Total spending', data: lineValues, borderColor:'#177C77', backgroundColor:'rgba(23,124,119,0.10)', pointBackgroundColor:'#E4624F', tension:0.25 }] },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{ mode:'index', intersect:false },
+    scales:{
+      y:{ beginAtZero:true, title:{ display:true, text:'AED spent' }, ticks:{ callback:function(value){ return 'AED ' + value.toLocaleString(); } } },
+      x:{ ticks:{ autoSkip:true, maxTicksLimit:6, maxRotation:0, minRotation:0 } }
+    },
+    plugins:{ tooltip:{ callbacks:{ label:function(context){ return ' AED ' + context.parsed.y.toLocaleString(); } } } }
+  }
+});
+{% endif %}
+</script>
+{% endblock %}
