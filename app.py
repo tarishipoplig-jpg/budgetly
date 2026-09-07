@@ -5,6 +5,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 from pathlib import Path
 from datetime import datetime
+import os
 import re
 
 # --- Configuration ---
@@ -465,4 +466,4 @@ def api_summary():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
