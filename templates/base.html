@@ -6,9 +6,9 @@
   <title>Budget Tracker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@0.468.0"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', v='20260907') }}">
 </head>
 <body>
   <header class="topbar">
@@ -22,7 +22,7 @@
   </main>
 
   <footer class="footer">
-    <div class="container">&copy; {{ current_year if current_year else "" }} Budgetly</div>
+    <div class="container">&copy; {{ current_year if current_year else "" }}</div>
   </footer>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

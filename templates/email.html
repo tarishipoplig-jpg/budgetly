@@ -1,21 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card center-card">
-  <h2>{{ 'Log in to Budgetly' if mode == 'login' else 'Create your Budgetly account' }}</h2>
-  <p class="muted">Use your email and password to {{ 'continue' if mode == 'login' else 'get started' }}.</p>
-  <form id="emailForm" method="POST" novalidate>
-    <input type="hidden" name="mode" id="modeInput" value="{{ mode or 'login' }}">
-    <label class="label">Email address</label>
-    <input id="emailInput" name="email" type="email" value="{{ email if email }}" placeholder="you@example.com" required>
-    <label class="label">Password</label>
-    <input id="passwordInput" name="password" type="password" minlength="8" placeholder="At least 8 characters" required>
-    <div id="emailError" class="error">{{ error if error }}</div>
-    <button class="btn primary" id="submitButton">Log in</button>
-  </form>
-  <p class="muted auth-switch">
-    <span id="switchPrompt">Need an account?</span>
-    <button type="button" class="btn" id="switchButton">Sign up</button>
-  </p>
+<div class="auth-shell">
+  <section class="auth-spotlight">
+    <h2>Budgetly</h2>
+    <p class="auth-copy">A simple budgeting tool for students in the UAE to track expenses, compare spending to a monthly plan, and keep essentials in view.</p>
+  </section>
+
+  <div class="card auth-card">
+    <div class="auth-header">
+      <h2>{{ 'Log in to Budgetly' if mode == 'login' else 'Create your Budgetly account' }}</h2>
+    </div>
+    <p class="muted auth-subtitle">Use your email and password to {{ 'continue' if mode == 'login' else 'get started' }}.</p>
+    <form id="emailForm" method="POST" novalidate>
+      <input type="hidden" name="mode" id="modeInput" value="{{ mode or 'login' }}">
+      <label class="label">Email address</label>
+      <input id="emailInput" name="email" type="email" value="{{ email if email }}" placeholder="you@example.com" required>
+      <label class="label">Password</label>
+      <input id="passwordInput" name="password" type="password" minlength="8" placeholder="At least 8 characters" required>
+      <div id="emailError" class="error">{{ error if error }}</div>
+      <button class="btn primary auth-submit" id="submitButton">Log in</button>
+    </form>
+    <p class="muted auth-switch">
+      <span id="switchPrompt">Need an account?</span>
+      <button type="button" class="btn" id="switchButton">Sign up</button>
+    </p>
+  </div>
 </div>
 {% endblock %}
 
