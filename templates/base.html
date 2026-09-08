@@ -12,8 +12,16 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="container">
-      <h1 class="brand">Budgetly</h1>
+    <div class="container topbar-inner">
+      <a class="brand-link" href="{{ url_for('landing') }}">
+        <img class="logo-image" src="{{ url_for('static', filename='images/logo.png') }}" alt="Budgetly logo">
+        <h1 class="brand">Budgetly</h1>
+      </a>
+      {% if session.get('user_id') %}
+      <a class="btn header-action" href="{{ url_for('logout') }}">Sign out</a>
+      {% elif request.endpoint == 'landing' %}
+      <a class="btn header-action" href="{{ url_for('capture_email') }}">Log in</a>
+      {% endif %}
     </div>
   </header>
 
@@ -22,7 +30,10 @@
   </main>
 
   <footer class="footer">
-    <div class="container">&copy; {{ current_year if current_year else "" }}</div>
+    <div class="container footer-inner">
+      <img class="logo-image small-logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Budgetly logo">
+      <span>&copy; {{ current_year if current_year else "" }}</span>
+    </div>
   </footer>
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

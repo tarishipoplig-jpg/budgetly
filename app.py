@@ -182,7 +182,13 @@ def inject_now():
     return {"current_year": datetime.utcnow().year}
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
+def landing():
+    """Public frontend shown before authentication."""
+    return render_template("landing.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
 def capture_email():
     """Sign up or log in with an email and password."""
     if request.method == "POST":
@@ -230,7 +236,7 @@ def capture_email():
         session["user_id"] = user_id
         return redirect(url_for("setup"))
 
-    return render_template("email.html", mode="login")
+    return render_template("email.html", mode=request.args.get("mode", "login"))
 
 
 @app.route("/setup", methods=["GET", "POST"])
@@ -270,6 +276,13 @@ def setup():
         budgets_by_emirate=MONTHLY_BUDGETS_BY_EMIRATE,
         personalized_ratios_by_emirate=PERSONALIZED_RATIOS_BY_EMIRATE,
     )
+
+
+@app.route("/logout")
+def logout():
+    """End the current session and return to the public frontend."""
+    session.clear()
+    return redirect(url_for("landing"))
 
 
 @app.route("/dashboard")

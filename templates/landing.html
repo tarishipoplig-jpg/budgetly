@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="landing-page">
+  <div class="landing-copy">
+    <span class="landing-kicker">Personal budgeting for UAE students</span>
+    <h2>Know where your AED goes.</h2>
+    <p>Set a monthly plan, track everyday expenses, and see what is left before the month gets away from you.</p>
+    <div class="landing-actions">
+      <a class="btn primary" href="{{ url_for('capture_email') }}">Log in</a>
+      <a class="btn" href="{{ url_for('capture_email', mode='signup') }}">Create account</a>
+    </div>
+  </div>
+
+  <div class="landing-preview" aria-label="Budget overview preview">
+    <div class="preview-topline">
+      <span>Monthly overview</span>
+      <strong>AED</strong>
+    </div>
+    <div class="preview-balance">
+      <span>Available this month</span>
+      <strong>AED 2,480</strong>
+    </div>
+    <div class="preview-row"><span>Essentials</span><strong>AED 1,320</strong></div>
+    <div class="preview-bar"><span></span></div>
+    <div class="preview-row"><span>Transport</span><strong>AED 420</strong></div>
+    <div class="preview-bar transport"><span></span></div>
+    <div class="preview-row"><span>Savings</span><strong>AED 740</strong></div>
+  </div>
+</section>
+{% endblock %}
